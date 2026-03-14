@@ -1,0 +1,568 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZSAPMZC5SPMATINFO_F01</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZSAPMZC5SPMATINFO_F01</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include SAPMZC5SPMATINFO_F01</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          SAPMZC5SPMATINFO_F01</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_fcat_layout</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_fcat_layout .
+
+  gs_layout-zebra      = 'X'.
+  gs_layout-cwidth_opt = 'A'.
+  gs_layout-sel_mode   = 'D'.
+  gs_layout-ctab_fname = 'COLOR'.
+
+  gs_stable-row = 'X'.
+  gs_stable-col = 'X'.
+
+  PERFORM make_fcat USING:
+        'X'  'MAT_ID'      'Mat ID'        'ZC5SPTMATL01_ITE'    ' ',
+        ' '  'MAT_TXT'     'Mat Name'      'ZC5SPTMATL01_ITE'    ' ',
+        ' '  'REQ_QTY'     'Req. Qty'      'ZC5SPTMATL02'        'LABST',
+        ' '  'LABST'       'Curr. Stk'     'ZC5SPTMATL02'        ' ',
+        ' '  'SHORT_QTY'   'Short. Qty'    'ZC5SPTMATL02'        'LABST',
+        ' '  'MEINS'       'Unit'          'ZC5SPTMATL01_ITE'    ' ',
+        ' '  'AVAIL_FLAG'  'Avail'         ' '                   ' '.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form get_material</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        textqq</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM get_material .
+
+  SELECT a~mat_id a~mat_txt a~meins
+         b~labst
+    INTO CORRESPONDING FIELDS OF TABLE gt_mat
+    FROM zc5sptmatl01_ite AS a
+    LEFT OUTER JOIN zc5sptmatl02 AS b
+      ON a~mat_id  = b~mat_id
+   WHERE a~item_id = gs_header-item_id.
+
+  IF sy-subrc &lt;&gt; 0.
+    MESSAGE s001.
+    EXIT.
+  ENDIF.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_material</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_material .
+
+  DATA : BEGIN OF ls_bom,
+           item_id     TYPE zc5sptbom01-item_id,
+           mat_id      TYPE zc5sptbom01-mat_id,
+           req_qty_1ea TYPE zc5sptbom01-req_qty_1ea,
+         END OF ls_bom,
+
+         lt_bom       LIKE TABLE OF ls_bom,
+
+         lv_req_qty   TYPE zc5sptmatl02-labst,
+         lv_short_qty TYPE zc5sptmatl02-labst,
+         ls_color     TYPE lvc_s_scol,
+         lv_tabix     TYPE sy-ucomm,
+         lv_gamng     TYPE zc5sptprod01-gamng.
+
+  " BOM Select 해서 lt_bom 에 저장
+  SELECT item_id mat_id req_qty_1ea
+    INTO CORRESPONDING FIELDS OF TABLE lt_bom
+    FROM zc5sptbom01
+   WHERE item_id = gs_header-item_id.
+
+  IF sy-subrc &lt;&gt; 0.
+    MESSAGE s001.
+    EXIT.
+  ENDIF.
+
+  " Production Req Qty 가져오기
+<font color ="#0000FF">*  SELECT SINGLE gamng</font>
+<font color ="#0000FF">*    INTO lv_gamng</font>
+<font color ="#0000FF">*    FROM zc5sptprod01</font>
+<font color ="#0000FF">*   WHERE prod_id = gs_header-prod_id.</font>
+
+  LOOP AT gt_mat INTO gs_mat.
+
+    lv_tabix = sy-tabix.
+
+    CLEAR   : ls_color.
+    REFRESH : gs_mat-color.
+
+    READ TABLE lt_bom INTO ls_bom WITH KEY mat_id = gs_mat-mat_id.
+
+    lv_req_qty =  gs_header-gamng * ls_bom-req_qty_1ea.
+    lv_short_qty = lv_req_qty - gs_mat-labst.
+
+    " 생산요청수량 ( gs_header-gamng ) * 1ea ( ls_bom-req_어쩌고) 해서 필요수량에 넣기
+    gs_mat-req_qty = lv_req_qty.
+
+    " 필요수량 - 현재재고 = 부족수량에 넣기  ( +일때만. -일때는 신경 ㄴㄴ. 어짜피 0)
+    IF lv_short_qty &gt; 0.
+      gs_mat-short_qty = lv_short_qty.
+    ELSE.
+      CLEAR gs_mat-short_qty .
+    ENDIF.
+
+    " 부족수량에 값이 있을때 : X, 없을때 : O, Color 변경
+    IF gs_mat-short_qty IS NOT INITIAL.
+      gs_mat-avail_flag = 'X'.
+
+      ls_color-fname     = 'AVAIL_FLAG'.
+      ls_color-color-col = 6.
+      ls_color-color-int = 1.
+      ls_color-color-inv = 0.
+
+      APPEND ls_color TO gs_mat-color.
+      CLEAR  ls_color.
+
+    ELSE.
+      gs_mat-avail_flag = 'O'.
+
+      ls_color-fname     = 'AVAIL_FLAG'.
+      ls_color-color-col = 5.
+      ls_color-color-int = 1.
+      ls_color-color-inv = 0.
+
+      APPEND ls_color TO gs_mat-color.
+      CLEAR  ls_color.
+
+    ENDIF.
+
+    IF gv_flag IS NOT INITIAL.
+
+      gs_mat-avail_flag = '-'.
+      ls_color-fname     = 'AVAIL_FLAG'.
+      ls_color-color-col = 3.
+      ls_color-color-int = 0.
+      ls_color-color-inv = 0.
+
+      APPEND ls_color TO gs_mat-color.
+      CLEAR  ls_color.
+
+    ENDIF.
+
+    MODIFY gt_mat FROM gs_mat INDEX lv_tabix
+    TRANSPORTING req_qty short_qty avail_flag color.
+
+  ENDLOOP.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form make_fcat</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM make_fcat  USING  pv_key
+                       pv_field
+                       pv_text
+                       pv_ref_table
+                       pv_ref_field.
+
+  gs_fcat-key       = pv_key.
+  gs_fcat-fieldname = pv_field.
+  gs_fcat-coltext   = pv_text.
+  gs_fcat-ref_table = pv_ref_table.
+  gs_fcat-ref_field = pv_ref_field.
+
+  CASE pv_field.
+    WHEN 'REQ_QTY'.
+      gs_fcat-qfieldname = 'MEINS'.
+    WHEN 'LABST'.
+      gs_fcat-qfieldname = 'MEINS'.
+    WHEN 'SHORT_QTY'.
+      gs_fcat-qfieldname = 'MEINS'.
+
+  ENDCASE.
+
+  APPEND gs_fcat TO gt_fcat.
+  CLEAR  gs_fcat.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form get_header</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM get_header .
+
+  DATA : lv_pro TYPE zc5sptprod01-prod_id.
+
+  GET PARAMETER ID : 'PRO' FIELD lv_pro.
+
+  SELECT a~prod_id a~order_num a~gamng
+         b~item_id
+         c~item_name
+    INTO CORRESPONDING FIELDS OF TABLE gt_header
+    FROM zc5sptprod01 AS a
+   INNER JOIN zc5sptordr02 AS b
+      ON a~order_num = b~order_num
+    LEFT OUTER JOIN zc5sptitem01 AS c
+      ON b~item_id = c~item_id
+   WHERE a~prod_id = lv_pro
+     AND a~prode_stat EQ ' '. "where 조건 추가
+
+  IF sy-subrc &lt;&gt; 0.
+    MESSAGE :s001.
+    EXIT.
+  ENDIF.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_header</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_header .
+
+  " 어짜피 1줄짜리 itab.
+  READ TABLE gt_header INTO gs_header INDEX 1.
+
+  IF sy-subrc &lt;&gt; 0.
+    EXIT.
+  ENDIF.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form display_screen</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM display_screen .
+
+  CREATE OBJECT gcl_container
+    EXPORTING
+      container_name = 'GCL_CONTAINER'.
+
+  CREATE OBJECT gcl_grid
+    EXPORTING
+      i_parent = gcl_container.
+
+  gs_variant-report = sy-repid.
+
+  IF gcl_handler IS INITIAL.
+
+    CREATE OBJECT gcl_handler.
+
+  ENDIF.
+
+  SET HANDLER : gcl_handler-&gt;handle_toolbar       FOR gcl_grid,
+                gcl_handler-&gt;handle_user_command  FOR gcl_grid.
+
+  CALL METHOD gcl_grid-&gt;set_table_for_first_display
+    EXPORTING
+      is_layout       = gs_layout
+      is_variant      = gs_variant
+      i_default       = 'X'
+      i_save          = 'A'
+    CHANGING
+      it_fieldcatalog = gt_fcat
+      it_outtab       = gt_mat.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form prod_order</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM prod_order .
+  " 상품 재고 테이블 - stock어저고애  수량에  +1 ,
+
+  " history에  qty 에 + 해주기
+
+  DATA : ls_stok01   TYPE zc5sptstok01, " 현 재고 테이블 선언.
+         ls_sthi01   TYPE zc5sptsthi01, " 히스토리 변수 테이블 선언.
+         ls_matl02   TYPE zc5sptmatl02, " 현 자재 테이블 선언.
+         lt_matl02   LIKE TABLE OF ls_matl02,
+         ls_mat_row  LIKE LINE OF gt_mat,
+         lv_answer,
+         lv_curr_qty TYPE zc5sptstok01-curr_qty, " 현 재고 개수 변수 선언. (수정될 재고개수)
+         lv_stk_seq  TYPE zc5sptsthi01-stk_seq, " 히스토리 row 번수 선언.
+         lv_labst    TYPE zc5sptmatl02-labst.   " 현 자재 개수 변수 선언.
+
+
+  LOOP AT gt_mat INTO gs_mat.
+    IF gs_mat-avail_flag = 'X'.
+      MESSAGE e000 WITH 'Not enough materials to produce the product.'
+      DISPLAY LIKE 'E'.
+      EXIT.
+    ENDIF.
+
+  ENDLOOP.
+
+  CALL FUNCTION 'POPUP_TO_CONFIRM'
+    EXPORTING
+      titlebar      = 'Confirm Production'
+      text_question = 'Do you want to increase product stock and record the history?'
+    IMPORTING
+      answer        = lv_answer.
+
+  IF lv_answer NE '1'.
+    EXIT.
+  ENDIF.
+
+<font color ="#0000FF">* 현 재고(상품) 테이블 저장 로직.</font>
+  SELECT SINGLE curr_qty erdat
+    INTO CORRESPONDING FIELDS OF ls_stok01
+    FROM zc5sptstok01
+   WHERE item_id = gs_header-item_id.
+
+  IF sy-subrc = 0. " 수량 +
+    ls_stok01-item_id  = gs_header-item_id.
+    ls_stok01-curr_qty = ls_stok01-curr_qty + gs_header-gamng.
+    ls_stok01-meins    = gs_mat-meins.
+
+    IF ls_stok01-erdat IS INITIAL.
+      ls_stok01-erdat = sy-datum.
+      ls_stok01-erzet = sy-uzeit.
+      ls_stok01-ernam = sy-uname.
+    ELSE.
+      ls_stok01-aedat = sy-datum.
+      ls_stok01-aezet = sy-uzeit.
+      ls_stok01-aenam = sy-uname.
+    ENDIF.
+
+  ENDIF.
+
+  MODIFY zc5sptstok01 FROM ls_stok01.
+
+
+<font color ="#0000FF">* 히스토리 테이블 저장.</font>
+  SELECT MAX( stk_seq )
+    INTO lv_stk_seq
+    FROM zc5sptsthi01.
+
+  lv_stk_seq += 1.
+
+<font color ="#0000FF">* 신규 레코드</font>
+  ls_sthi01-stk_seq   = lv_stk_seq.
+  ls_sthi01-item_id   = gs_header-item_id.
+  ls_sthi01-chg_qty   = gs_header-gamng.
+  ls_sthi01-meins     = gs_mat-meins.
+  ls_sthi01-move_type = 'IN'.
+  ls_sthi01-erdat     = sy-datum.
+  ls_sthi01-erzet     = sy-uzeit.
+  ls_sthi01-ernam     = sy-uname.
+
+  INSERT zc5sptsthi01 FROM ls_sthi01.
+
+  IF sy-subrc NE 0.
+    MESSAGE s000 WITH 'Change history has not been updated.'
+    DISPLAY LIKE 'E'.
+    EXIT.
+  ENDIF.
+
+
+<font color ="#0000FF">* 현 자재 테이블 저장 로직.</font>
+
+  SELECT item_id mat_id werks labst meins
+         erdat erzet ernam aedat aezet aenam
+    INTO CORRESPONDING FIELDS OF TABLE lt_matl02
+    FROM zc5sptmatl02
+   WHERE item_id = gs_header-item_id.
+
+  DATA : lv_tabix TYPE sy-tabix.
+
+  LOOP AT gt_mat INTO gs_mat.
+
+    lv_tabix = sy-tabix.
+
+    READ TABLE lt_matl02 INTO ls_matl02 WITH KEY mat_id = gs_mat-mat_id.
+
+    IF sy-subrc = 0 .
+
+      ls_matl02-labst = ls_matl02-labst - gs_mat-req_qty.
+
+      IF ls_matl02-erdat IS INITIAL.
+        ls_matl02-erdat = sy-datum.
+        ls_matl02-erzet = sy-uzeit.
+        ls_matl02-ernam = sy-uname.
+
+      ELSE.
+        ls_matl02-aedat = sy-datum.
+        ls_matl02-aezet = sy-uzeit.
+        ls_matl02-aenam = sy-uname.
+
+      ENDIF.
+
+      MODIFY zc5sptmatl02 FROM ls_matl02.
+
+    ENDIF.
+
+  ENDLOOP.
+
+  IF sy-dbcnt &gt;= 1.
+    COMMIT WORK AND WAIT.
+    MESSAGE s000 WITH 'Production and stock update completed.'.
+
+    PERFORM get_material.
+    PERFORM set_material.
+    PERFORM set_after_prod.
+    PERFORM refresh_grid.
+
+    gv_flag = 'X'.
+
+  ELSE.
+    ROLLBACK WORK.
+    MESSAGE s000 WITH 'History saving failed'.
+
+  ENDIF.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form mat_order</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM mat_order .
+
+  DATA : lv_cnt         TYPE i,
+         lv_req_qty(15) TYPE c.
+
+  lv_req_qty = gs_mat-req_qty.
+
+  CALL METHOD gcl_grid-&gt;get_selected_rows
+    IMPORTING
+      et_index_rows = gt_row.
+
+  lv_cnt = lines( gt_row ).
+
+  IF lv_cnt &lt; 1.
+    MESSAGE s000 WITH 'First, select row' DISPLAY LIKE 'E'.
+    EXIT.
+  ELSEIF lv_cnt =&gt; 2.
+    MESSAGE s000 WITH 'Select only one row' DISPLAY LIKE 'E'.
+    EXIT.
+  ENDIF.
+
+  LOOP AT gt_row INTO gs_row.
+
+    READ TABLE gt_mat INTO gs_mat INDEX gs_row-index.
+
+    IF sy-subrc = 0.
+
+      " 자재 생산 테이블 업데이트하기 .
+<font color ="#0000FF">*      MODIFY ZC5SPTMTOD01</font>
+
+      SET PARAMETER ID : 'MAT' FIELD gs_mat-mat_id,
+                         'QTY' FIELD lv_req_qty.
+      CALL TRANSACTION 'ZC5SPRMTOD01' AND SKIP FIRST SCREEN.
+
+    ENDIF.
+
+  ENDLOOP.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form refresh_grid</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM refresh_grid .
+
+  CALL METHOD gcl_grid-&gt;refresh_table_display
+    EXPORTING
+      is_stable      = gs_stable
+      i_soft_refresh = space.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_after_prod</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_after_prod .
+
+  DATA : lv_tabix TYPE sy-tabix,
+         ls_prod  LIKE zc5sptprod01,
+         ls_color TYPE lvc_s_scol.
+
+  " 생산 요청 테이블 마스터에 flag값 주기
+
+  UPDATE zc5sptprod01
+     SET prode_stat = 'X'
+         aedat      = sy-datum
+         aezet      = sy-uzeit
+         aenam      = sy-uname
+   WHERE prod_id    = gs_header-prod_id.
+
+  LOOP AT gt_mat INTO gs_mat.
+
+    lv_tabix = sy-tabix.
+
+    gs_mat-req_qty   = 0.
+    gs_mat-short_qty = 0.
+
+    REFRESH gs_mat-color.
+
+    gs_mat-avail_flag = '-'.
+    ls_color-fname     = 'AVAIL_FLAG'.
+    ls_color-color-col = 3.
+    ls_color-color-int = 0.
+    ls_color-color-inv = 0.
+
+    APPEND ls_color TO gs_mat-color.
+    CLEAR  ls_color.
+
+    MODIFY gt_mat FROM gs_mat INDEX lv_tabix
+    TRANSPORTING req_qty short_qty color avail_flag.
+
+  ENDLOOP.
+
+ENDFORM.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

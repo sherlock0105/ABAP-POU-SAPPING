@@ -1,0 +1,518 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZSAPMZC5SPORDR01_F01</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZSAPMZC5SPORDR01_F01</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include SAPMZC5SPORDR01_F01</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          SAPMZC5SPORDR01_F01</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_fcat_layout</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_fcat_layout .
+
+  gs_layout-zebra      = 'X'.
+  gs_layout-cwidth_opt = 'A'.
+  gs_layout-sel_mode   = 'D'.
+  gs_layout-stylefname = 'STYLE'.
+  gs_layout-ctab_fname = 'COLOR'.
+
+  gs_stable-row = 'X'.
+  gs_stable-col = 'X'.
+
+  PERFORM make_fcat USING :
+     'X' 'ORDER_NUM'     ' '          'ZC5SPTORDR02'  ' ' ,
+     ' ' 'ITEM_ID'       ' '          'ZC5SPTORDR02'  ' ' ,
+     ' ' 'ITEM_NAME'     ' '          'ZC5SPTITEM01'  ' ' ,
+     ' ' 'ORDER_DATE'    ' '          'ZC5SPTORDR02'  ' ' ,
+     ' ' 'ITEM_PRICE'    'Item Price' 'ZC5SPTITEM01'  ' ' ,
+     ' ' 'PRICE_WAERS'   ' '          'ZC5SPTORDR02'  'WAERS' ,
+     ' ' 'CURR_QTY'      'Qty'        'ZC5SPTORDR02'  ' ' ,
+     ' ' 'MEINS'         ' '          'ZC5SPTORDR02'  ' ' ,
+     ' ' 'TOTAL_AMT'     'Total Amt'  'ZC5SPTORDR02'  ' ' ,
+     ' ' 'WAERS'         ' '          'ZC5SPTORDR02'  ' ' ,
+     ' ' 'COMPANY_NAME'  ' '          'ZC5SPTCOMP01'  ' ' ,
+     ' ' 'FLAG'          ' '          'ZC5SPTORDR02'  ' ' .
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form display_order_list</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM display_order_list .
+
+  CREATE OBJECT gcl_container
+    EXPORTING
+      container_name = 'GCL_CONTAINER'.                 " Name of the Screen CustCtrl Name to Link Container To
+
+  CREATE OBJECT gcl_grid
+    EXPORTING
+      i_parent = gcl_container.                 " Parent Container
+
+  gs_variant-report = sy-repid.
+
+  CALL METHOD gcl_grid-&gt;set_table_for_first_display
+    EXPORTING
+      is_variant      = gs_variant                 " Layout
+      i_save          = 'A'                        " Save Layout
+      i_default       = 'X'                        " Default Display Variant
+      is_layout       = gs_layout                  " Layout
+    CHANGING
+      it_outtab       = gt_order                   " Output Table
+      it_fieldcatalog = gt_fcat.                   " Field Catalog
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form make_fcat</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM make_fcat  USING   pv_key
+                        pv_field
+                        pv_text
+                        pv_ref_table
+                        pv_ref_field.
+
+  gs_fcat-key       = pv_key.
+  gs_fcat-fieldname = pv_field.
+  gs_fcat-coltext   = pv_text.
+  gs_fcat-ref_table = pv_ref_table.
+  gs_fcat-ref_field = pv_ref_field.
+
+  CASE pv_field.
+
+    WHEN 'TOTAL_AMT' OR 'ITEM_PRICE'.
+      gs_fcat-cfieldname = 'WAERS'.
+
+    WHEN 'CURR_QTY'.
+      gs_fcat-qfieldname = 'MEINS'.
+
+    WHEN 'MEINS' OR 'WAERS' OR 'PRICE_WAERS'.
+      gs_fcat-emphasize  = 'C500'.
+
+  ENDCASE.
+
+  APPEND gs_fcat TO gt_fcat.
+  CLEAR  gs_fcat.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form get_order_list</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM get_order_list .
+
+  DATA : lv_order_num TYPE zc5sptordr02-order_num.
+
+  SELECT a~company_code a~company_name
+         b~order_num
+         b~item_id  b~order_date b~curr_qty b~meins
+         b~total_amt "합계
+         b~flag
+         b~waers AS price_waers
+         c~item_price c~waers c~item_name
+         c~item_cost
+    INTO CORRESPONDING FIELDS OF TABLE gt_order
+    FROM zc5sptcomp01 AS a
+   INNER JOIN zc5sptordr02 AS b
+      ON a~company_code EQ b~company_code
+    LEFT OUTER JOIN zc5sptitem01 AS c
+      ON b~company_code EQ c~company_code
+     AND b~item_id     EQ c~item_id
+   WHERE b~flag NOT IN ( 'P' , 'A' )
+   ORDER BY a~company_code b~order_num.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form refresh_grid</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM refresh_grid .
+
+  CALL METHOD gcl_grid-&gt;refresh_table_display
+    EXPORTING
+      is_stable      = gs_stable
+      i_soft_refresh = space.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form approve_order</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM approve_order .
+
+  DATA: lv_answer,
+        lv_question(50).
+
+  CLEAR   : gs_row.
+  REFRESH : gt_row.
+
+  CALL METHOD gcl_grid-&gt;get_selected_rows
+    IMPORTING
+      et_index_rows = gt_row.
+
+  IF gt_row IS INITIAL. "행이 선택되지 않았을때
+    MESSAGE s000 WITH '승인할 행을 선택하세요.' DISPLAY LIKE 'E'.
+    EXIT.
+  ENDIF.
+
+  IF lines( gt_row ) &gt; 1. "다중행 선택 방지
+    MESSAGE s000 WITH '한 건만 선택하세요.' DISPLAY LIKE 'E'.
+    EXIT.
+  ENDIF.
+
+  READ TABLE gt_row INTO gs_row INDEX 1.
+
+  CHECK sy-subrc = 0.
+
+  READ TABLE gt_order INTO gs_order INDEX gs_row-index.
+
+  CHECK sy-subrc = 0.
+
+<font color ="#0000FF">* 4. 중복 승인 방지</font>
+  IF gs_order-flag = 'A'.
+    MESSAGE s000 WITH '이미 승인된 오더입니다.' DISPLAY LIKE 'E'.
+    EXIT.
+  ENDIF.
+
+<font color ="#0000FF">* 5. 승인 확인 팝업</font>
+
+  CONCATENATE gs_order-item_id+8(2) gs_order-item_name '를 승인하시겠습니까?'
+  INTO lv_question
+  SEPARATED BY space. "중간 중간 공백 값 주기
+
+  CALL FUNCTION 'POPUP_TO_CONFIRM'
+    EXPORTING
+      titlebar              = 'Approval'
+      text_question         = lv_question
+      text_button_1         = 'YES'
+      text_button_2         = 'NO'
+      display_cancel_button = abap_false
+    IMPORTING
+      answer                = lv_answer.
+
+  CHECK lv_answer EQ '1'.   " YES 아니면 종료
+
+<font color ="#0000FF">*DB 업데이트 이후에 ITAB 에 반영이 맞는건지? ITAB 반영하고 DB 로 불러오는게 맞는건지?..</font>
+
+  UPDATE zc5sptordr02
+     SET flag = 'A'
+   WHERE order_num EQ gs_order-order_num.
+
+  IF sy-subrc NE 0.
+    ROLLBACK WORK.
+    MESSAGE s000 WITH '승인 처리 중 오류가 발생했습니다.'
+    DISPLAY LIKE 'E'.
+    EXIT.
+  ENDIF.
+
+  COMMIT WORK.
+
+  gs_order-flag = 'A'.
+  MODIFY gt_order FROM gs_order INDEX gs_row-index.
+
+  MESSAGE s000 WITH '정상적으로 승인되었습니다.'.
+
+  PERFORM get_order_list.
+  PERFORM style_set.
+  PERFORM refresh_grid.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form reject_order</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM reject_order .
+
+  DATA: lv_answer,
+        lv_question(50).
+
+  DATA: lv_index TYPE sy-tabix.
+
+  CALL METHOD gcl_grid-&gt;get_selected_rows
+    IMPORTING
+      et_index_rows = gt_row.
+
+  IF gt_row IS INITIAL.
+    MESSAGE s000 WITH 'Please select a row.' DISPLAY LIKE 'E'.
+    EXIT.
+  ENDIF.
+
+  IF lines( gt_row ) &gt; 1.
+    MESSAGE s000 WITH 'Please select a row.' DISPLAY LIKE 'E'.
+    EXIT.
+  ENDIF.
+
+  READ TABLE gt_row INTO gs_row INDEX 1.
+  CHECK sy-subrc EQ 0.
+
+  READ TABLE gt_order INTO gs_order INDEX gs_row-index.
+  CHECK sy-subrc EQ 0.
+
+  CONCATENATE gs_order-item_id+8(2) gs_order-item_name '를 반려하시겠습니까?'
+         INTO lv_question
+    SEPARATED BY space. "중간 중간 공백 값 주기
+
+  CALL FUNCTION 'POPUP_TO_CONFIRM'
+    EXPORTING
+      titlebar              = 'Reject'
+      text_question         = lv_question
+      text_button_1         = 'YES'
+      text_button_2         = 'NO'
+      display_cancel_button = abap_false "space
+    IMPORTING
+      answer                = lv_answer.
+
+  CHECK lv_answer EQ '1'.   " YES 아니면 종료
+
+  gs_order-flag = 'R'.   " 거절
+
+  MODIFY gt_order FROM gs_order INDEX gs_row-index.
+
+  UPDATE zc5sptordr02
+   SET flag = 'R'
+  WHERE order_num = gs_order-order_num.
+
+  IF sy-subrc = 0.
+    COMMIT WORK.
+  ELSE.
+    ROLLBACK WORK.
+  ENDIF.
+
+  PERFORM get_order_list.
+  PERFORM style_set.
+  PERFORM refresh_grid.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form display_data</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM display_data .
+
+  CALL METHOD gcl_grid-&gt;get_selected_rows
+    IMPORTING
+      et_index_rows = gt_row.                 " Indexes of Selected Rows
+
+  IF gt_row IS INITIAL.
+    MESSAGE s000 WITH 'First, select row' DISPLAY LIKE 'E'.
+    EXIT.
+  ENDIF.
+
+  IF lines( gt_row ) &gt; 1.
+    MESSAGE s000 WITH 'Please select only one row' DISPLAY LIKE 'E'.
+    EXIT.
+  ENDIF.
+
+  READ TABLE gt_row INTO gs_row INDEX 1.
+
+  gs_order-total_margin =
+  ( gs_order-curr_qty * gs_order-item_price )
+- ( gs_order-curr_qty * gs_order-item_cost ).
+
+  CHECK sy-subrc EQ 0.
+
+  READ TABLE gt_order INTO gs_order INDEX gs_row-index.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form style_set</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM style_set .
+
+  DATA : lv_tabix TYPE sy-tabix,
+         ls_color TYPE lvc_s_scol.
+
+  LOOP AT gt_order INTO gs_order.
+
+    lv_tabix = sy-tabix.
+
+    IF gs_order-flag = 'A'.
+
+    ENDIF.
+
+    CASE gs_order-flag.
+
+      WHEN 'A'.
+
+        ls_color-fname = 'FLAG'.
+        ls_color-color-col = 5.
+        ls_color-color-int = 1.
+        ls_color-color-inv = 1.
+
+        APPEND ls_color TO gs_order-color.
+        CLEAR  ls_color.
+
+      WHEN 'R'.
+
+        ls_color-fname = 'FLAG'.
+        ls_color-color-col = 6.
+        ls_color-color-int = 1.
+        ls_color-color-inv = 1.
+
+        APPEND ls_color TO gs_order-color.
+        CLEAR  ls_color.
+
+      WHEN ' '.
+
+        ls_color-fname = 'FLAG'.
+        ls_color-color-col = 3.
+        ls_color-color-int = 1.
+        ls_color-color-inv = 1.
+
+        APPEND ls_color TO gs_order-color.
+        CLEAR  ls_color.
+
+    ENDCASE.
+
+    MODIFY gt_order FROM gs_order INDEX lv_tabix
+    TRANSPORTING color.
+
+  ENDLOOP.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form sales_order</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM sales_order .
+
+<font color ="#0000FF">*  CALL TRANSACTION 'ZC5SPRORDR01' AND SKIP FIRST SCREEN.</font>
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form stock_overview</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM stock_overview .
+
+  SET PARAMETER ID : 'COD' FIELD gs_order-company_code,
+                     'NAM' FIELD gs_order-company_name.
+
+  CALL TRANSACTION 'ZC5SPRSTOK01' AND SKIP FIRST SCREEN.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form approve_order_multi</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM approve_order_multi .
+
+  DATA: lv_answer,
+        lv_question(50).
+
+  CLEAR gt_row.
+
+  CALL METHOD gcl_grid-&gt;get_selected_rows
+    IMPORTING
+      et_index_rows = gt_row.
+
+  IF gt_row IS INITIAL.
+    MESSAGE s000 WITH '승인할 행을 선택하세요.' DISPLAY LIKE 'E'.
+    EXIT.
+  ENDIF.
+
+
+  LOOP AT gt_row INTO gs_row.
+
+    READ TABLE gt_order INTO gs_order INDEX gs_row-index.
+    CHECK sy-subrc = 0.
+
+    UPDATE zc5sptordr02
+       SET flag = 'A'
+     WHERE order_num = gs_order-order_num.
+
+    IF sy-subrc &lt;&gt; 0.
+      ROLLBACK WORK.
+      MESSAGE s000 WITH '승인 처리 중 오류가 발생했습니다.'
+      DISPLAY LIKE 'E'.
+      EXIT.
+    ENDIF.
+
+  ENDLOOP.
+
+  COMMIT WORK.
+
+  LOOP AT gt_row INTO gs_row.
+    READ TABLE gt_order INTO gs_order INDEX gs_row-index.
+    IF sy-subrc = 0.
+      gs_order-flag = 'A'.
+      MODIFY gt_order FROM gs_order INDEX gs_row-index.
+    ENDIF.
+  ENDLOOP.
+
+  DATA lv_msg TYPE string.
+
+  lv_msg = |{ lines( gt_row ) }건이 승인되었습니다.|.
+
+  MESSAGE s000 WITH lv_msg.
+
+  PERFORM get_order_list.
+  PERFORM style_set.
+  PERFORM refresh_grid.
+
+ENDFORM.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

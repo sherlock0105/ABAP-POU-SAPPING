@@ -1,0 +1,64 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZC5SPRPDOD01</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZC5SPRPDOD01</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  [C5] Production Order Request</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Report ZC5SPRPDRQ01</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&  Create On 260119                            Create By 정유리</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+
+include <a href ="zc5sprpdrod1_top.html">zc5sprpdrod1_top</a>.  " Global Data
+
+<font color ="#0000FF">*INCLUDE zc5sprpdod01_s01                        .  " Selection Screen</font>
+include <a href ="zc5sprpdod01_c01.html">zc5sprpdod01_c01</a>.  " Local Class
+include <a href ="zc5sprpdod01_o01.html">zc5sprpdod01_o01</a>.  " PBO-Modules
+include <a href ="zc5sprpdod01_i01.html">zc5sprpdod01_i01</a>.  " PAI-Modules
+include <a href ="zc5sprpdod01_f01.html">zc5sprpdod01_f01</a>.  " FORM-Routines
+
+START-OF-SELECTION.
+  PERFORM get_prod_order.
+
+  CALL SCREEN '0100'.
+
+<font color ="#0000FF">*GUI Texts</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">* T0100 --&gt; [C5] Production Order Request</font>
+<font color ="#0000FF">* T0101 --&gt; Order List</font>
+
+<font color ="#0000FF">*Text elements</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">* E01 Order Number  is required field</font>
+<font color ="#0000FF">* E02 First, Select a row</font>
+<font color ="#0000FF">* E03 The data has already been processed</font>
+<font color ="#0000FF">* E04 Order Master Data not found</font>
+<font color ="#0000FF">* T01 Selection Condition</font>
+
+
+<font color ="#0000FF">*Selection texts</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">* PA_ODNUM D       .</font>
+
+
+<font color ="#0000FF">*Messages</font>
+<font color ="#0000FF">*----------------------------------------------------------</font>
+<font color ="#0000FF">*</font>
+<font color ="#0000FF">* Message class: ZC5SPM</font>
+<font color ="#0000FF">*000   & & & &</font>
+<font color ="#0000FF">*002   Data was saved successfully.</font>
+<font color ="#0000FF">*003   Data was delelted successfully.</font>
+<font color ="#0000FF">*004   Data save failed.</font>
+<font color ="#0000FF">*005</font>
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

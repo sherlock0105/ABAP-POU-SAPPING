@@ -1,0 +1,66 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZSAPMZC5SPMATINFO_TOP</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZSAPMZC5SPMATINFO_TOP</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include SAPMZC5SPMATINFO_TOP</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include SAPMZC5SPMATINFO_TOP                     - Module Pool      SAPMZ5SPMATINFO</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+PROGRAM zsapmz5spmatinfo MESSAGE-ID zc5spm.
+
+CLASS : lcl_event_handler DEFINITION DEFERRED.
+
+DATA : BEGIN OF gs_header,
+         prod_id    TYPE zc5sptprod01-prod_id,   " 생산 요청 번호
+         order_num  TYPE zc5sptprod01-order_num, " join 위해 사용 (item id 가져오기위해)
+         item_id    TYPE zc5sptordr02-item_id,   " 상품 번호
+         item_name  TYPE zc5sptitem01-item_name, " 상품 명
+         gamng      TYPE zc5sptprod01-gamng,     " 생산 요청 수량
+         prode_stat TYPE zc5sptprod01-prode_stat, " X 가 처리
+       END OF gs_header,
+
+       gt_header LIKE TABLE OF gs_header,
+
+       BEGIN OF gs_mat,
+         prod_id    TYPE zc5sptprod01-prod_id,
+         mat_id     TYPE zc5sptmatl01_ite-mat_id, " Material ID
+         mat_txt    TYPE zc5sptmatl01_ite-mat_txt, " Material Name
+         meins      TYPE zc5sptmatl01_ite-meins, " Material Unit
+         req_qty    TYPE menge_d, " Required quantity (필요수량)
+         labst      TYPE zc5sptmatl02-labst, " Current stock (현재재고)
+         short_qty  TYPE menge_d, " Shortage quantity (부족수량)
+         avail_flag,
+         needs_flag,
+         color      TYPE lvc_t_scol,
+       END OF gs_mat,
+
+       gt_mat    LIKE TABLE OF gs_mat,
+       gv_flag,
+       gv_meins  TYPE meins VALUE 'EA',
+       gv_quan   TYPE c LENGTH 20,
+
+       gv_okcode TYPE sy-ucomm.
+
+DATA : gcl_container TYPE REF TO cl_gui_custom_container,
+       gcl_grid      TYPE REF TO cl_gui_alv_grid,
+       gcl_handler   TYPE REF TO lcl_event_handler,
+       gs_fcat       TYPE lvc_s_fcat,
+       gt_fcat       TYPE lvc_t_fcat,
+       gs_layout     TYPE lvc_s_layo,
+       gs_variant    TYPE disvariant,
+       gs_stable     TYPE lvc_s_stbl,
+       gs_row        TYPE lvc_s_row,
+       gt_row        TYPE lvc_t_row,
+       gt_exclude    TYPE ui_functions.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

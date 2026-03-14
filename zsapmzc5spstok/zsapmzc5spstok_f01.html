@@ -1,0 +1,727 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZSAPMZC5SPSTOK_F01</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZSAPMZC5SPSTOK_F01</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include SAPMZC5SPSTOK_F01</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          SAPMZC5SPSTOK_F01</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form get_stock</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM get_stock .
+
+  _clear gs_stock gt_stock.
+
+  SELECT  a~item_id       a~item_name
+          a~item_cost     a~item_price  a~waers
+          b~curr_qty      b~meins
+          b~erdat         b~erzet       b~ernam
+          b~aedat         b~aezet       b~aenam
+          a~waers AS price_waers
+    INTO CORRESPONDING FIELDS OF TABLE gt_stock
+    FROM      zc5sptitem01 AS a
+   INNER JOIN zc5sptstok01 AS b
+      ON a~item_id      EQ b~item_id
+   ORDER BY a~item_id.
+
+
+  gt_stock_old = gt_stock.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form get_hist</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM get_hist .
+
+  _clear gs_hist gt_hist.
+
+  SELECT stk_seq  item_id    chg_qty
+         meins    move_type
+         erdat    erzet      ernam
+         aedat    aezet      aenam
+    INTO CORRESPONDING FIELDS OF TABLE gt_hist
+    FROM zc5sptsthi01
+    ORDER BY stk_seq DESCENDING.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_fcat_layout</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_fcat_1.
+
+  gs_layout-zebra      = 'X'.
+  gs_layout-cwidth_opt = 'A'.
+  gs_layout-sel_mode   = 'D'.
+  gs_layout-stylefname = 'STYLE'.
+<font color ="#0000FF">*  gs_layout-grid_title = TEXT-g01.</font>
+
+  gs_stable-col = 'X'.
+  gs_stable-row = 'X'.
+
+  PERFORM make_fcat_1 USING :
+      'X'   'ITEM_ID'      ' '   'ZC5SPTITEM01'    ' '  'X',
+      ' '   'ITEM_NAME'    ' '   'ZC5SPTITEM01'    ' '  'X',
+      ' '   'ITEM_COST'    ' '   'ZC5SPTITEM01'    ' '  'X',
+      ' '   'PRICE_WAERS'  ' '   'ZC5SPTITEM01'    'WAERS'  'X',
+      ' '   'ITEM_PRICE'   ' '   'ZC5SPTITEM01'    ' '  'X',
+      ' '   'WAERS'        ' '   'ZC5SPTITEM01'    ' '  'X',
+      ' '   'CURR_QTY'     ' '   'ZC5SPTSTOK01'    ' '  'X',
+      ' '   'MEINS'        ' '   'ZC5SPTSTOK01'    ' '  'X'.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form exclude_toolbar</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM exclude_toolbar .
+
+  APPEND cl_gui_alv_grid=&gt;mc_fc_check          TO gt_exclude.
+  APPEND cl_gui_alv_grid=&gt;mc_fc_refresh        TO gt_exclude.
+  APPEND cl_gui_alv_grid=&gt;mc_fc_loc_cut        TO gt_exclude.
+  APPEND cl_gui_alv_grid=&gt;mc_fc_loc_copy       TO gt_exclude.
+  APPEND cl_gui_alv_grid=&gt;mc_mb_paste          TO gt_exclude.
+  APPEND cl_gui_alv_grid=&gt;mc_fc_loc_undo       TO gt_exclude.
+  APPEND cl_gui_alv_grid=&gt;mc_fc_loc_append_row TO gt_exclude.
+  APPEND cl_gui_alv_grid=&gt;mc_fc_loc_insert_row TO gt_exclude.
+  APPEND cl_gui_alv_grid=&gt;mc_fc_loc_delete_row TO gt_exclude.
+  APPEND cl_gui_alv_grid=&gt;mc_fc_loc_copy_row   TO gt_exclude.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form make_fcat</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM make_fcat_1  USING  pv_key        pv_field      pv_text
+                         pv_ref_table  pv_ref_field  pv_edit.
+
+  gs_fcat-key       = pv_key.
+  gs_fcat-fieldname = pv_field.
+  gs_fcat-coltext   = pv_text.
+  gs_fcat-ref_table = pv_ref_table.
+  gs_fcat-ref_field = pv_ref_field.
+  gs_fcat-edit      = pv_edit.
+
+  CASE pv_field.
+
+    WHEN 'CURR_QTY'.
+      gs_fcat-qfieldname = 'MEINS'.
+
+    WHEN 'ITEM_COST'.
+      gs_fcat-cfieldname = 'WAERS'.
+
+    WHEN 'ITEM_PRICE'.
+      gs_fcat-cfieldname = 'WAERS'.
+
+    WHEN 'ITEM_NAME'.
+      gs_fcat-hotspot    = 'X'.
+
+    WHEN 'MEINS'.
+      gs_fcat-emphasize = 'C500'.
+
+  ENDCASE.
+
+  APPEND gs_fcat TO gt_fcat_1.
+  CLEAR  gs_fcat.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form display_tab1</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM display_tab1 .
+
+  CREATE OBJECT gcl_container_1
+    EXPORTING
+      container_name = 'GCL_CONTAINER_1'.
+
+  CREATE OBJECT gcl_grid_1
+    EXPORTING
+      i_parent = gcl_container_1.
+
+  gs_variant-report = sy-repid.
+  gs_variant-handle = '1ST'.
+
+  IF gcl_handler IS NOT BOUND.
+    CREATE OBJECT gcl_handler.
+  ENDIF.
+
+  SET HANDLER : gcl_handler-&gt;handle_data_changed  FOR gcl_grid_1,
+                gcl_handler-&gt;handle_hotspot       FOR gcl_grid_1.
+
+  CALL METHOD gcl_grid_1-&gt;register_edit_event
+    EXPORTING
+      i_event_id = gcl_grid_1-&gt;mc_evt_modified.
+
+
+  CALL METHOD gcl_grid_1-&gt;set_table_for_first_display
+    EXPORTING
+      is_variant           = gs_variant
+      i_save               = 'A'
+      i_default            = 'X'
+      is_layout            = gs_layout
+      it_toolbar_excluding = gt_exclude
+    CHANGING
+      it_outtab            = gt_stock
+      it_fieldcatalog      = gt_fcat_1.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_fcat_2</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_fcat_2 .
+
+  gs_layout-zebra      = 'X'.
+  gs_layout-cwidth_opt = 'A'.
+  gs_layout-sel_mode   = 'D'.
+
+  gs_stable-col = 'X'.
+  gs_stable-row = 'X'.
+
+  PERFORM make_fcat_2 USING :
+
+      'X'   'STK_SEQ'      ' '   'ZC5SPTSTHI01'    ' '  ' ',
+      ' '   'ITEM_ID'      ' '   'ZC5SPTSTHI01'    ' '  ' ',
+      ' '   'CHG_QTY'      ' '   'ZC5SPTSTHI01'    ' '  ' ',
+      ' '   'MEINS'        ' '   'ZC5SPTSTHI01'    ' '  ' ',
+      ' '  'STATUS'    TEXT-f01  ' '               ' '  ' ',
+      ' '   'MOVE_TYPE'    ' '   'ZC5SPTSTHI01'    ' '  ' ',
+      ' '   'ERDAT'        ' '   'ZC5SPTSTHI01'    ' '  ' ',
+      ' '   'ERZET'        ' '   'ZC5SPTSTHI01'    ' '  ' ',
+      ' '   'ERNAM'        ' '   'ZC5SPTSTHI01'    ' '  ' '.
+<font color ="#0000FF">*      ' '   'AEDAT'        ' '   'ZC5SPTSTHI01'    ' '  ' ',</font>
+<font color ="#0000FF">*      ' '   'AEZET'        ' '   'ZC5SPTSTHI01'    ' '  ' ',</font>
+<font color ="#0000FF">*      ' '   'AENAM'        ' '   'ZC5SPTSTHI01'    ' '  ' '.</font>
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form make_fcat_2</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM make_fcat_2  USING  pv_key        pv_field      pv_text
+                         pv_ref_table  pv_ref_field  pv_edit.
+
+  gs_fcat-key       = pv_key.
+  gs_fcat-fieldname = pv_field.
+  gs_fcat-coltext   = pv_text.
+  gs_fcat-ref_table = pv_ref_table.
+  gs_fcat-ref_field = pv_ref_field.
+  gs_fcat-edit      = pv_edit.
+
+  CASE pv_field.
+
+    WHEN 'MEINS'.
+      gs_fcat-emphasize = 'C500'.
+
+    WHEN 'CHG_QTY'.
+      gs_fcat-qfieldname = 'MEINS'.
+
+    WHEN 'STATUS'.
+      gs_fcat-icon = 'X'.
+
+  ENDCASE.
+
+  APPEND gs_fcat TO gt_fcat_2.
+  CLEAR  gs_fcat.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form display_tab2</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM display_tab2 .
+
+  CREATE OBJECT gcl_container_2
+    EXPORTING
+      container_name = 'GCL_CONTAINER_2'.
+
+  CREATE OBJECT gcl_grid_2
+    EXPORTING
+      i_parent = gcl_container_2.
+
+  gs_variant-report = sy-repid.
+  gs_variant-handle = '2ND'.
+
+  CALL METHOD gcl_grid_2-&gt;set_table_for_first_display
+    EXPORTING
+      is_variant           = gs_variant
+      i_save               = 'A'
+      i_default            = 'X'
+      is_layout            = gs_layout
+      it_toolbar_excluding = gt_exclude
+    CHANGING
+      it_outtab            = gt_hist
+      it_fieldcatalog      = gt_fcat_2.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_style</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_style .
+
+  DATA : lv_tabix TYPE sy-tabix,
+         ls_style TYPE lvc_s_styl.
+
+  CLEAR : lv_tabix, ls_style, gs_stock.
+
+  LOOP AT gt_stock INTO gs_stock.
+
+    lv_tabix = sy-tabix.
+
+    _clear ls_style gs_stock-style.
+
+    ls_style-fieldname = 'ITEM_COST'.
+    ls_style-style     = cl_gui_alv_grid=&gt;mc_style_disabled.
+
+    APPEND ls_style TO gs_stock-style.
+    CLEAR  ls_style.
+
+    ls_style-fieldname = 'ITEM_ID'.
+    ls_style-style     = cl_gui_alv_grid=&gt;mc_style_disabled.
+
+    APPEND ls_style TO gs_stock-style.
+    CLEAR  ls_style.
+
+    ls_style-fieldname = 'ITEM_NAME'.
+    ls_style-style     = cl_gui_alv_grid=&gt;mc_style_disabled.
+
+    APPEND ls_style TO gs_stock-style.
+    CLEAR  ls_style.
+
+    ls_style-fieldname = 'ITEM_PRICE'.
+    ls_style-style     = cl_gui_alv_grid=&gt;mc_style_disabled.
+
+    APPEND ls_style TO gs_stock-style.
+    CLEAR  ls_style.
+
+    ls_style-fieldname = 'PRICE_WAERS'.
+    ls_style-style     = cl_gui_alv_grid=&gt;mc_style_disabled.
+
+    APPEND ls_style TO gs_stock-style.
+    CLEAR  ls_style.
+
+    ls_style-fieldname = 'WAERS'.
+    ls_style-style     = cl_gui_alv_grid=&gt;mc_style_disabled.
+
+    APPEND ls_style TO gs_stock-style.
+    CLEAR  ls_style.
+
+    MODIFY gt_stock FROM gs_stock INDEX lv_tabix
+    TRANSPORTING style.
+
+  ENDLOOP.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form refresh_grid</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM refresh_grid .
+
+  IF gcl_grid_1 IS BOUND.
+
+    CALL METHOD gcl_grid_1-&gt;refresh_table_display
+      EXPORTING
+        is_stable      = gs_stable
+        i_soft_refresh = space.
+
+  ENDIF.
+
+  IF gcl_grid_2 IS BOUND.
+
+    CALL METHOD gcl_grid_2-&gt;refresh_table_display
+      EXPORTING
+        is_stable      = gs_stable
+        i_soft_refresh = space.
+
+  ENDIF.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form save_data</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM save_data .
+
+  DATA : ls_save_stock TYPE zc5sptstok01,
+         lt_save_stock LIKE TABLE OF ls_save_stock.
+
+  _clear ls_save_stock lt_save_stock.
+
+  CALL METHOD gcl_grid_1-&gt;check_changed_data.
+
+
+  LOOP AT gt_stock INTO gs_stock WHERE mark EQ 'X'.
+
+    MOVE-CORRESPONDING gs_stock TO ls_save_stock.
+
+    IF ls_save_stock-erdat IS INITIAL.
+      ls_save_stock-erdat = sy-datum.
+      ls_save_stock-erzet = sy-uzeit.
+      ls_save_stock-ernam = sy-uname.
+    ELSE.
+      ls_save_stock-aedat = sy-datum.
+      ls_save_stock-aezet = sy-uzeit.
+      ls_save_stock-aenam = sy-uname.
+    ENDIF.
+
+    APPEND : ls_save_stock TO lt_save_stock.
+    CLEAR  : ls_save_stock.
+
+  ENDLOOP.
+
+  IF lt_save_stock IS NOT INITIAL.
+
+    MODIFY zc5sptstok01 FROM TABLE lt_save_stock.
+
+  ENDIF.
+
+  IF sy-dbcnt &gt; 0.
+
+    PERFORM save_hist.
+    COMMIT WORK AND WAIT.
+    MESSAGE s002.
+
+  ENDIF.
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_style2</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_style2 .
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form handle_data_changed</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      --&gt; ER_DATA_CHANGED</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM handle_data_changed  USING  pcl_changed TYPE REF TO cl_alv_changed_data_protocol.
+
+  DATA : lt_modi TYPE lvc_t_modi,
+         ls_modi TYPE lvc_s_modi.
+
+  MOVE-CORRESPONDING pcl_changed-&gt;mt_mod_cells TO lt_modi.
+
+  LOOP AT lt_modi INTO ls_modi.
+
+    READ TABLE gt_stock INTO gs_stock INDEX ls_modi-row_id.
+
+    IF sy-subrc NE 0.
+      CONTINUE.
+    ENDIF.
+
+    gs_stock-mark = 'X'.
+
+    MODIFY gt_stock FROM gs_stock INDEX ls_modi-row_id
+    TRANSPORTING mark.
+
+  ENDLOOP.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form save_hist</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM save_hist .
+
+  DATA : lt_hist          TYPE TABLE OF zc5sptsthi01,
+         ls_hist          TYPE zc5sptsthi01,
+         lv_history_lines TYPE zc5sptsthi01-stk_seq,                "hist번호
+         ls_old           LIKE gs_stock,                            "과거값
+         lv_diff          TYPE i.
+
+  SELECT SINGLE MAX( stk_seq )
+    INTO lv_history_lines
+    FROM zc5sptsthi01.
+
+  IF lv_history_lines IS INITIAL.
+    lv_history_lines = 0.
+  ENDIF.
+
+  LOOP AT gt_stock INTO gs_stock WHERE mark = 'X'.
+
+    CLEAR ls_old.
+    READ TABLE gt_stock_old INTO ls_old
+    WITH KEY item_id = gs_stock-item_id.
+
+    IF sy-subrc &lt;&gt; 0.
+      CONTINUE.
+    ENDIF.
+
+    lv_diff = gs_stock-curr_qty - ls_old-curr_qty.  "차이
+
+    IF lv_diff = 0.
+      CONTINUE.
+    ENDIF.
+
+    lv_history_lines = lv_history_lines + 1.
+
+    ls_hist-stk_seq = lv_history_lines.
+    ls_hist-item_id = gs_stock-item_id.
+    ls_hist-chg_qty = lv_diff.
+    ls_hist-meins   = gs_stock-meins.
+
+    IF lv_diff &gt; 0.
+      ls_hist-move_type = 'IN'.
+    ELSE.
+      ls_hist-move_type = 'OUT'.
+    ENDIF.
+
+    ls_hist-erdat = sy-datum.
+    ls_hist-erzet = sy-uzeit.
+    ls_hist-ernam = sy-uname.
+
+    APPEND ls_hist TO lt_hist.
+    CLEAR ls_hist.
+
+  ENDLOOP.
+
+  IF lt_hist IS NOT INITIAL.
+    INSERT zc5sptsthi01 FROM TABLE lt_hist.
+  ENDIF.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form handle_hotspot</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      --&gt; E_ROW_ID</font>
+<font color ="#0000FF">*&      --&gt; E_COLUMN_ID</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM handle_hotspot  USING    ps_row TYPE lvc_s_row
+                              ps_col TYPE lvc_s_col.
+
+  IF ps_row-rowtype IS NOT INITIAL.
+    EXIT.
+  ENDIF.
+
+  CLEAR : gs_stock.
+
+  READ TABLE gt_stock INTO gs_stock INDEX ps_row-index.
+
+  IF sy-subrc NE 0.
+    EXIT.
+  ENDIF.
+
+  PERFORM get_pop USING gs_stock-item_id.
+
+  IF gt_pop IS INITIAL.
+    MESSAGE s000 WITH 'DATA not found'.
+    EXIT.
+  ENDIF.
+
+  CALL SCREEN '0103' STARTING AT 20 3.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form get_pop</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      --&gt; GS_STOCK_ITEM_ID</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM get_pop  USING  pv_item_id TYPE zc5sptmatl01_ite-item_id.
+
+  _clear gs_pop gt_pop.
+
+  SELECT a~item_id    a~mat_id a~mat_txt a~mat_typ
+         b~item_name
+         c~labst      c~meins
+    INTO CORRESPONDING FIELDS OF TABLE gt_pop
+    FROM zc5sptmatl01_ite AS a
+   INNER JOIN zc5sptitem01 AS b
+      ON a~item_id EQ b~item_id
+    INNER JOIN zc5sptmatl02 AS c
+    ON a~mat_id EQ c~mat_id
+   WHERE a~item_id = pv_item_id.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_fcat_pop</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_fcat_pop .
+  PERFORM make_fcat_pop USING :
+          'X' 'ITEM_ID'     ' '  'ZC5SPTMATL01_ITE'  ' ',
+          ' ' 'ITEM_NAME'   ' '  'ZC5SPTITEM01'      ' ',
+          ' ' 'MAT_ID'      ' '  'ZC5SPTMATL01_ITE'  ' ',
+          ' ' 'MAT_TXT'     ' '  'ZC5SPTMATL01_ITE'  ' ',
+          ' ' 'MAT_TYP'     ' '  'ZC5SPTMATL01_ITE'  ' ',
+          ' ' 'LABST'       ' '  'ZC5SPTMATL02'      ' ',
+          ' ' 'MEINS'       ' '  'ZC5SPTMATL02'      ' '.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form make_fcat_pop</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM make_fcat_pop  USING pv_key pv_field pv_text pv_ref_table pv_ref_field.
+
+  gs_fcat-key       = pv_key.
+  gs_fcat-fieldname = pv_field.
+  gs_fcat-coltext   = pv_text.
+  gs_fcat-ref_table = pv_ref_table.
+  gs_fcat-ref_field = pv_ref_field.
+
+  CASE gs_fcat-fieldname.
+    WHEN 'LABST'.
+      gs_fcat-qfieldname = 'MEINS'.
+  ENDCASE.
+
+  APPEND gs_fcat TO gt_fcat_pop.
+  CLEAR  gs_fcat.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form display_pop</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM display_pop .
+
+  CREATE OBJECT gcl_container_pop
+    EXPORTING
+      container_name = 'GCL_CONTAINER_POP'.
+
+  CREATE OBJECT gcl_grid_pop
+    EXPORTING
+      i_parent = gcl_container_pop.
+
+  gs_layout-no_toolbar = 'X'.
+
+  CALL METHOD gcl_grid_pop-&gt;set_table_for_first_display
+    EXPORTING
+      is_layout       = gs_layout
+    CHANGING
+      it_fieldcatalog = gt_fcat_pop
+      it_outtab       = gt_pop.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_icon</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_icon .
+
+  DATA : lv_tabix TYPE sy-tabix.
+
+  LOOP AT gt_hist INTO gs_hist.
+    lv_tabix = sy-tabix.
+
+    IF gs_hist-chg_qty &gt; 0.
+      gs_hist-status = icon_positive.
+    ENDIF.
+    IF gs_hist-chg_qty &lt; 0.
+      gs_hist-status = icon_negative.
+    ENDIF.
+
+    MODIFY gt_hist FROM gs_hist INDEX lv_tabix
+    TRANSPORTING status.
+
+  ENDLOOP.
+
+ENDFORM.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

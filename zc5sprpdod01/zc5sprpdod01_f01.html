@@ -1,0 +1,588 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZC5SPRPDOD01_F01</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZC5SPRPDOD01_F01</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZC5SPRPDOD01_F01</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include          ZC5SPRPDOD01_F01</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form get_prod_order</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM get_prod_order .
+
+  _clear gs_prod_order gt_prod_order.
+
+  GET PARAMETER ID : 'ORN' FIELD gs_prod_order-order_num,
+                     'INM' FIELD gs_prod_order-item_name.
+
+  SELECT a~prod_id a~order_num a~gamng a~meins a~prode_stat a~erdat AS order_date
+         c~item_name
+    INTO CORRESPONDING FIELDS OF TABLE gt_prod_order
+    FROM zc5sptprod01 AS a
+    INNER JOIN zc5sptordr02 AS b
+       ON a~order_num = b~order_num
+    LEFT OUTER JOIN zc5sptitem01 AS c
+      ON b~item_id EQ c~item_id
+   WHERE a~prode_stat = space
+   ORDER BY a~prod_id a~order_num.
+
+  gs_prod_order-meins = 'EA'. "이재민
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_fcat_layout</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_fcat_layout .
+
+  gs_layout-zebra      = 'X'.
+  gs_layout-cwidth_opt = 'A'.
+  gs_layout-sel_mode   = 'D'.
+
+  gs_stable-row = 'X'.
+  gs_stable-col = 'X'.
+
+  PERFORM make_fcat USING :
+        'X'  'PROD_ID'     ''           'ZC5SPTPROD01'  '',
+        ' '  'ORDER_NUM'   ''           'ZC5SPTPROD01'  '',
+        ' '  'ITEM_NAME'   ''           'ZC5SPTITEM01'  '',
+        ' '  'ORDER_DATE'  'Order Date' 'ZC5SPTPROD01'  'ERDAT',
+        ' '  'GAMNG'       ''           'ZC5SPTPROD01'  '',
+        ' '  'MEINS'       ''           'ZC5SPTPROD01'  ''.
+  "        ' '  'PRODE_STAT'  ''  'ZC5SPTPROD01'  ''.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form make_fcat</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM make_fcat  USING pv_key
+                      pv_field
+                      pv_text
+                      pv_ref_table
+                      pv_ref_field.
+
+  gs_fcat-key       = pv_key.
+  gs_fcat-fieldname = pv_field.
+  gs_fcat-coltext   = pv_text.
+  gs_fcat-ref_field = pv_ref_field.
+  gs_fcat-ref_table = pv_ref_table.
+
+  CASE pv_field.
+    WHEN 'ORDER_NUM'.
+      gs_fcat-hotspot = 'X'.
+
+    WHEN 'GAMNG'.
+      gs_fcat-qfieldname = 'MEINS'.
+
+    WHEN 'MEINS'.
+      gs_fcat-emphasize = 'C500'.
+
+    WHEN 'PRODE_STAT'.
+      gs_fcat-checkbox = 'X'.
+  ENDCASE.
+
+  APPEND gs_fcat TO gt_fcat.
+  CLEAR  gs_fcat.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form display_prod_order</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM display_prod_order .
+
+  CREATE OBJECT gcl_container
+    EXPORTING
+      container_name = 'GCL_CONTAINER'.
+
+  CREATE OBJECT gcl_grid
+    EXPORTING
+      i_parent = gcl_container.
+
+  IF gcl_handler IS NOT BOUND.
+    CREATE OBJECT gcl_handler.
+  ENDIF.
+
+  SET HANDLER : gcl_handler-&gt;handle_hotspot FOR gcl_grid.
+
+  gs_variant-report = sy-repid.
+
+  CALL METHOD gcl_grid-&gt;set_table_for_first_display
+    EXPORTING
+      is_layout       = gs_layout
+      is_variant      = gs_variant
+      i_save          = 'A'
+      i_default       = 'X'
+    CHANGING
+      it_fieldcatalog = gt_fcat
+      it_outtab       = gt_prod_order.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form save_data</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM save_data .
+
+  DATA : lv_prod_id TYPE zc5sptprod01-prod_id,
+         ls_save    TYPE zc5sptprod01.
+
+  CLEAR : lv_prod_id, ls_save.
+
+<font color ="#0000FF">* 필수값 체크</font>
+  IF gs_prod_order-order_num IS INITIAL.
+
+    MESSAGE s000 WITH TEXT-e01 DISPLAY LIKE 'E'.
+    EXIT.
+
+  ENDIF.
+
+<font color ="#0000FF">* 수정가능한지 체크</font>
+  IF gs_prod_order-prode_stat IS NOT INITIAL.
+
+    MESSAGE s000 WITH TEXT-e03 DISPLAY LIKE 'E'.
+    EXIT.
+
+  ENDIF.
+
+  IF gs_prod_order-prod_id IS INITIAL.
+
+    PERFORM get_new_prod_id CHANGING lv_prod_id.
+    gs_prod_order-prod_id = lv_prod_id.
+
+  ENDIF.
+
+  MOVE-CORRESPONDING gs_prod_order TO ls_save.
+
+  IF ls_save-erdat IS INITIAL.
+
+    ls_save-erdat = sy-datum.
+    ls_save-erzet = sy-uzeit.
+    ls_save-ernam = sy-uname.
+
+  ELSE.
+
+    ls_save-aedat = sy-datum.
+    ls_save-aezet = sy-uzeit.
+    ls_save-aenam = sy-uname.
+
+  ENDIF.
+
+  IF ls_save IS INITIAL.
+    EXIT.
+  ENDIF.
+
+  MODIFY zc5sptprod01 FROM ls_save.
+
+  IF sy-dbcnt &gt; 0.
+    COMMIT WORK AND WAIT.
+
+    PERFORM get_prod_order.
+    PERFORM refresh_grid.
+
+    MESSAGE s002.
+  ELSE.
+    ROLLBACK WORK.
+    MESSAGE s004 DISPLAY LIKE 'E'.
+  ENDIF.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form get_new_prod_id</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM get_new_prod_id CHANGING pv_prod_id TYPE zc5sptprod01-prod_id.
+
+  DATA lv_max_id TYPE zc5sptprod01-prod_id.
+  DATA lv_next   TYPE i.
+
+  SELECT MAX( prod_id )
+    INTO lv_max_id
+    FROM zc5sptprod01.
+
+  IF lv_max_id IS INITIAL.
+
+    pv_prod_id = 1.
+
+  ELSE.
+
+    lv_next = lv_max_id.
+    lv_next = lv_next + 1.
+    pv_prod_id = lv_next.
+
+  ENDIF.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form refresh_grid</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM refresh_grid .
+
+  CALL METHOD gcl_grid-&gt;refresh_table_display
+    EXPORTING
+      is_stable      = gs_stable
+      i_soft_refresh = space.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form display_data</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM display_data .
+
+  DATA : lv_cnt TYPE i.
+
+  _clear gs_row gt_row.
+
+  CALL METHOD gcl_grid-&gt;get_selected_rows
+    IMPORTING
+      et_index_rows = gt_row.
+
+  lv_cnt = lines( gt_row ).
+
+  IF lv_cnt = 0.
+    MESSAGE s000 WITH TEXT-e02 DISPLAY LIKE 'E'.
+    EXIT.
+
+  ELSEIF lv_cnt &gt; 1.
+    MESSAGE s000 WITH TEXT-e03 DISPLAY LIKE 'E'.
+    EXIT.
+  ENDIF.
+
+  READ TABLE gt_row INTO gs_row INDEX 1.
+
+  IF sy-subrc NE 0.
+    EXIT.
+  ENDIF.
+
+  READ TABLE gt_prod_order INTO gs_prod_order INDEX gs_row-index.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form clear_data</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM clear_data .
+
+  CLEAR gs_prod_order.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form delete_data</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM delete_data .
+
+  IF gs_prod_order-prod_id IS INITIAL.
+
+    MESSAGE s000 WITH TEXT-e01 DISPLAY LIKE 'E'.
+    EXIT.
+
+  ENDIF.
+
+<font color ="#0000FF">* 수정가능한지 체크</font>
+  IF gs_prod_order-prode_stat IS NOT INITIAL.
+
+    MESSAGE s000 WITH TEXT-e03 DISPLAY LIKE 'E'.
+    EXIT.
+
+  ENDIF.
+
+  DELETE FROM zc5sptprod01
+   WHERE prod_id  = gs_prod_order-prod_id.
+
+  IF sy-subrc EQ 0.
+    COMMIT WORK AND WAIT.
+
+    PERFORM get_prod_order.
+    PERFORM refresh_grid.
+
+    MESSAGE s003.
+  ELSE.
+    ROLLBACK WORK.
+    MESSAGE s005 DISPLAY LIKE 'E'.
+  ENDIF.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form f4_order_num</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM f4_order_num .
+
+  DATA : BEGIN OF ls_order,
+           order_num    TYPE zc5sptordr02-order_num,
+           company_name TYPE zc5sptcomp01-company_name,
+           item_name    TYPE zc5sptitem01-item_name,
+           curr_qty     TYPE zc5sptordr02-curr_qty,
+           meins        TYPE zc5sptordr02-meins,
+           order_date   TYPE zc5sptordr02-order_date,
+         END OF ls_order,
+
+         lt_order  LIKE TABLE OF ls_order,
+
+         ls_return TYPE ddshretval,
+         lt_return LIKE TABLE OF ls_return.
+
+  _clear ls_order  lt_order.
+  _clear ls_return lt_return.
+
+  SELECT a~company_name
+         b~order_num     b~curr_qty b~meins b~order_date
+         c~item_name
+    INTO CORRESPONDING FIELDS OF TABLE lt_order
+    FROM zc5sptcomp01 AS a
+   INNER JOIN zc5sptordr02 AS b
+      ON a~company_code EQ b~company_code
+    LEFT OUTER JOIN zc5sptitem01 AS c
+      ON b~item_id EQ c~item_id
+   WHERE b~flag = 'A'
+   ORDER BY b~order_num.
+
+  CALL FUNCTION 'F4IF_INT_TABLE_VALUE_REQUEST'
+    EXPORTING
+      retfield     = 'ORDER_NUM'
+      dynpprog     = sy-repid
+      dynpnr       = sy-dynnr
+      window_title = 'Order List'
+      value_org    = 'S'
+    TABLES
+      return_tab   = lt_return
+      value_tab    = lt_order.
+
+  READ TABLE lt_return INTO ls_return INDEX 1.
+
+  IF sy-subrc NE 0.
+    EXIT.
+  ENDIF.
+
+  gs_prod_order-order_num = ls_return-fieldval.
+
+  READ TABLE lt_order INTO ls_order WITH KEY order_num = gs_prod_order-order_num.
+
+  IF sy-subrc EQ 0.
+
+    CALL FUNCTION 'SAPGUI_SET_FUNCTIONCODE'
+      EXPORTING
+        functioncode           = 'SETORDERDATA'
+      EXCEPTIONS
+        function_not_supported = 1
+        OTHERS                 = 2.
+
+  ENDIF.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form handle_hotspot</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      --&gt; E_ROW_ID</font>
+<font color ="#0000FF">*&      --&gt; E_COLUMN_ID</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM handle_hotspot  USING ps_row TYPE lvc_s_row
+                           ps_col TYPE lvc_s_col.
+
+  IF ps_row-rowtype IS NOT INITIAL.
+    EXIT.
+  ENDIF.
+
+  READ TABLE gt_prod_order INTO gs_prod_order INDEX ps_row-index.
+
+  IF sy-subrc NE 0.
+    EXIT.
+  ENDIF.
+
+  CASE ps_col-fieldname.
+    WHEN 'ORDER_NUM'.
+
+      PERFORM get_order_pop USING gs_prod_order-order_num.
+
+      IF gt_order_pop IS INITIAL.
+        MESSAGE s000 WITH TEXT-e04.
+        EXIT.
+      ENDIF.
+
+      CALL SCREEN '0101' STARTING AT 20 3.
+
+  ENDCASE.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form set_fcat_pop</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM set_fcat_pop .
+
+  PERFORM make_fcat_pop USING :
+     'X' 'ORDER_NUM'     ' ' 'ZC5SPTORDR02'  ' ' ,
+     ' ' 'ITEM_ID'       ' ' 'ZC5SPTORDR02'  ' ' ,
+     ' ' 'ITEM_NAME'     ' ' 'ZC5SPTITEM01'  ' ' ,
+     ' ' 'ORDER_DATE'    ' ' 'ZC5SPTORDR02'  ' ' ,
+     ' ' 'ITEM_PRICE'    ' ' 'ZC5SPTITEM01'  ' ' ,
+     ' ' 'CURR_QTY'      ' ' 'ZC5SPTORDR02'  ' ' ,
+     ' ' 'MEINS'         ' ' 'ZC5SPTORDR02'  ' ' ,
+     ' ' 'TOTAL_AMT'     ' ' 'ZC5SPTORDR02'  ' ' ,
+     ' ' 'WAERS'         ' ' 'ZC5SPTORDR02'  ' ' ,
+     ' ' 'COMPANY_NAME'  ' ' 'ZC5SPTCOMP01'  ' ' .
+
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form make_fcat_pop</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&      --&gt; P_</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM make_fcat_pop  USING pv_key
+                          pv_field
+                          pv_text
+                          pv_ref_table
+                          pv_ref_field.
+
+  gs_fcat-key       = pv_key.
+  gs_fcat-fieldname = pv_field.
+  gs_fcat-ref_table = pv_ref_table.
+  gs_fcat-ref_field = pv_ref_field.
+
+  CASE pv_field.
+
+    WHEN 'CURR_QTY'.
+      gs_fcat-qfieldname = 'MEINS'.
+
+    WHEN 'TOTAL_AMT' OR 'ITEM_PRICE'.
+      gs_fcat-cfieldname = 'WAERS'.
+
+  ENDCASE.
+
+  APPEND gs_fcat TO gt_fcat_pop.
+  CLEAR  gs_fcat.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form display_pop</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& --&gt;  p1        text</font>
+<font color ="#0000FF">*& &lt;--  p2        text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM display_pop .
+
+  CREATE OBJECT gcl_container_pop
+    EXPORTING
+      container_name = 'GCL_CONTAINER_POP'.
+
+  CREATE OBJECT gcl_grid_pop
+    EXPORTING
+      i_parent = gcl_container_pop.
+
+  gs_layout-no_toolbar = 'X'.
+
+  CALL METHOD gcl_grid_pop-&gt;set_table_for_first_display
+    EXPORTING
+      is_layout       = gs_layout
+    CHANGING
+      it_fieldcatalog = gt_fcat_pop
+      it_outtab       = gt_order_pop.
+
+ENDFORM.
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Form get_order_pop</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& text</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*&      --&gt; GS_PROD_ORDER_ORDER_NUM</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+FORM get_order_pop  USING pv_order_num.
+
+  _clear gs_order_pop gt_order_pop.
+
+  SELECT a~company_code a~company_name
+         b~order_num
+         b~item_id  b~order_date b~curr_qty b~meins
+         b~total_amt "합계
+         b~flag
+         c~item_price c~waers c~item_name
+    INTO CORRESPONDING FIELDS OF TABLE gt_order_pop
+    FROM zc5sptcomp01 AS a
+   INNER JOIN zc5sptordr02 AS b
+      ON a~company_code EQ b~company_code
+    LEFT OUTER JOIN zc5sptitem01 AS c
+      ON b~company_code EQ c~company_code
+     AND b~item_id      EQ c~item_id
+   WHERE b~order_num    EQ pv_order_num.
+
+ENDFORM.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>

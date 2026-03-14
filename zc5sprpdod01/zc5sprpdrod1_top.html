@@ -1,0 +1,74 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>ZC5SPRPDROD1_TOP</title>
+</head>
+<body bgcolor="#FFFFE0">
+<font size="3" face = "Arial" color="#000000"><b>Code listing for: ZC5SPRPDROD1_TOP</b></font>
+<br>
+<font size="3" face = "Arial" color="#000000"><b>Description:  Include ZC5SPRPDRQ01_TOP</b></font>
+<hr>
+<pre width="100">
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+<font color ="#0000FF">*& Include ZC5SPRPDRQ01_TOP                         - Report ZC5SPRPDRQ01</font>
+<font color ="#0000FF">*&---------------------------------------------------------------------*</font>
+REPORT zc5sprpdrq01 MESSAGE-ID zc5spm.
+
+CLASS : lcl_event_handler DEFINITION DEFERRED.
+
+DATA : BEGIN OF gs_prod_order,
+         prod_id    TYPE zc5sptprod01-prod_id,
+         order_num  TYPE zc5sptprod01-order_num,
+         item_name  TYPE zc5sptitem01-item_name,
+         order_date TYPE zc5sptprod01-erdat,
+         gamng      TYPE zc5sptprod01-gamng,
+         meins      TYPE zc5sptprod01-meins,
+         prode_stat TYPE zc5sptprod01-prode_stat,
+       END OF gs_prod_order,
+
+       gt_prod_order LIKE TABLE OF gs_prod_order,
+
+       gv_okcode     TYPE sy-ucomm.
+
+<font color ="#0000FF">**********************************************************************</font>
+<font color ="#0000FF">* ALV 관련</font>
+DATA : gcl_container TYPE REF TO cl_gui_custom_container,
+       gcl_grid      TYPE REF TO cl_gui_alv_grid,
+       gcl_handler   TYPE REF TO lcl_event_handler,
+       gs_fcat       TYPE lvc_s_fcat,
+       gt_fcat       TYPE lvc_t_fcat,
+       gs_layout     TYPE lvc_s_layo,
+       gs_variant    TYPE disvariant,
+       gs_stable     TYPE lvc_s_stbl,
+       gs_row        TYPE lvc_s_row,
+       gt_row        TYPE lvc_t_row.
+
+<font color ="#0000FF">**********************************************************************</font>
+<font color ="#0000FF">* Order Popup 관련</font>
+DATA : BEGIN OF gs_order_pop.
+         include structure <a href ="zc5sptordr02/dictionary-zc5sptordr02.html">zc5sptordr02</a>.
+DATA :   item_name    TYPE zc5sptitem01-item_name,
+         item_price   TYPE zc5sptitem01-item_price,
+         company_name TYPE zc5sptcomp01-company_name,
+       END OF gs_order_pop,
+
+       gt_order_pop      LIKE TABLE OF gs_order_pop,
+
+       gcl_container_pop TYPE REF TO cl_gui_custom_container,
+       gcl_grid_pop      TYPE REF TO cl_gui_alv_grid,
+       gt_fcat_pop       TYPE lvc_t_fcat.
+
+<font color ="#0000FF">**********************************************************************</font>
+<font color ="#0000FF">* Mecro</font>
+DEFINE _clear.
+
+  CLEAR   &1.
+  REFRESH &2.
+
+END-OF-DEFINITION.
+</pre>
+<hr>
+<font size="2" face = "Sans Serif">Extracted by Direct Download Enterprise version 1.3.1 - E.G.Mellodew. 1998-2005 UK. Sap Release 758
+</font>
+</body>
+</html>
